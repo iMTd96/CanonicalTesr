@@ -1,0 +1,158 @@
+<style>
+  #started {
+    overflow: none;
+    max-width: 100%;
+  }
+  #started .container {
+    margin: 60px;
+    display: flex;
+    flex-direction: row;
+    visibility: hidden;
+  }
+  hr {
+    color: grey;
+    height: 0px;
+    background: transparent;
+    width: 96%;
+    border: 0.5px dashed;
+  }
+  .loading {
+    visibility: visible;
+  }
+
+  .h5 {
+    margin: 20px;
+    color: blue;
+  }
+
+  #started .p-card {
+    background: rgba(255, 255, 255, 0.9);
+    border-top: 4px solid rgb(165, 125, 158);
+    border-radius: 6px;
+    box-shadow: 2px 2px 2px 1px rgba(0, 0, 0, 0.2);
+  }
+</style>
+
+<section id="started">
+  <div id="loading" class="loading">...</div>
+  <div class="container" id="loaded"></div>
+</section>
+
+<script>
+  function createElement(name, props, children) {
+    const element = document.createElement(name);
+
+    if (children instanceof HTMLElement) {
+      element.appendChild(children);
+    } else if (Array.isArray(children)) {
+      children.forEach((child) => element.appendChild(child));
+    } else {
+      element.appendChild(document.createTextNode(children));
+    }
+
+    attachProps(element, props);
+
+    return element;
+  }
+
+  function attachProps(element, props) {
+    if (typeof props === "object" && props) {
+      const entries = Object.entries(props);
+
+      entries.forEach(([key, value]) => {
+        element.setAttribute(key, value);
+      });
+    }
+  }
+
+  const API_URL =
+    "https://people.canonical.com/~anthonydillon/wp-json/wp/v2/posts.json";
+
+  var request = new XMLHttpRequest();
+
+  const loaded = document.querySelector("#loaded");
+  const loading = document.getElementById("loading");
+  // make call to API
+  request.open("GET", API_URL);
+  request.responseType = "json";
+  request.onload = function () {
+    // the response status tells us the HTTP status code, if it is 200, it means the response status is "OK"
+    if (this.status === 200) {
+      // we save the response into a variable
+      var data = this.response;
+      const month = {
+        "01": "January",
+        "02": "Febrary",
+        "03": "March",
+        "04": "April",
+        "05": "May",
+        "06": "June",
+        "07": "July",
+        "08": "August",
+        "09": "September",
+        10: "October",
+        11: "November",
+        12: "December",
+      };
+
+      const users = data.map((user) => {
+        loaded.appendChild(
+          createElement(
+            "div",
+            { class: "row" },
+            createElement("div", { class: "p-card u-no-padding" }, [
+              createElement(
+                "div",
+                { class: "h5" },
+                createElement("h5", null, "CLOUD AND SERVER")
+              ),
+              createElement("hr", { class: "hr" }, ""),
+              createElement(
+                "img",
+                {
+                  class: "p-card__image",
+                  id: "image",
+                  src: user.featured_media,
+                },
+                null
+              ),
+              createElement(
+                "div",
+                { class: "p-card__inner" },
+                createElement(
+                  "a",
+                  { class: "p-card__inner", href: user.link },
+                  createElement("h3", { id: "title" }, user.title.rendered)
+                )
+              ),
+              createElement("div", { class: "p-card__inner" }, [
+                createElement("h", {}, " by "),
+                createElement(
+                  "a",
+                  { id: "author", href: user._embedded.author[0].link },
+                  user._embedded.author[0].name
+                ),
+                createElement("h", {}, " on "),
+                createElement(
+                  "i",
+                  { id: "date" },
+                  user._start_day +
+                    " " +
+                    month[user._start_month] +
+                    " " +
+                    user._start_year
+                ),
+              ]),
+              createElement("hr", { class: "hr" }, ""),
+              createElement("div", { class: "p-card__inner" }, "Article"),
+            ])
+          )
+        );
+      });
+
+      loaded.setAttribute("style", "visibility: visible");
+      loading.setAttribute("style", "visibility: hidden");
+    }
+  };
+  request.send();
+</script>
